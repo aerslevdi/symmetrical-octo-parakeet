@@ -2,6 +2,7 @@ package com.cristal.Crypto.services;
 
 
 import com.cristal.Crypto.entities.CryptoCoin;
+import com.cristal.Crypto.entities.Currency;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,8 +19,8 @@ public class CryptoCompareService{
     }*/
 
 
-    public List<CryptoCoin> getAll()  {
-            List<CryptoCoin> cryptoCoins;
+    public List<Currency> getAll()  {
+            List<Currency> cryptoCoins;
             RestTemplate restTemplate = new RestTemplate();
             Object cryptoCoin = restTemplate.getForObject(
                     "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH&tsyms=USD,EUR", Object.class);

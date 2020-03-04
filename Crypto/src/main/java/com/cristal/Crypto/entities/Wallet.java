@@ -21,6 +21,11 @@ public class Wallet {
     @Column
     private HashMap<String, Double> prices;
 
+    public Wallet(String name) {
+        this.walletName = name;
+        this.prices = new HashMap<>();
+    }
+
     public void setWalletName(String walletName) {
         this.walletName = walletName;
     }

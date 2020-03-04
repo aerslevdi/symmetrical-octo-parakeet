@@ -5,6 +5,7 @@ import com.cristal.Crypto.entities.Wallet;
 import com.cristal.Crypto.repositories.WalletRepository;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +16,10 @@ public class WalletService {
     private WalletRepository walletRepository;
     private CryptoCompareService cryptoService;
 
-    public List<Wallet> getAll() {
+    public List<Wallet> getAll() throws NotFoundException{
         List<Wallet> walletList = walletRepository.findAll();
         if (walletList.isEmpty()) {
-            return new ArrayList<Wallet>();
+            return new ArrayList<>();
         } else {
             return walletList;
         }
@@ -43,9 +44,10 @@ public class WalletService {
         }
     }
 
-    public Wallet createWallet(Wallet wallet) {
-        walletRepository.save(wallet);
-        return wallet;
+    public Wallet createWallet(String name) throws NotFoundException {
+            Wallet wallet = new Wallet(name);
+            walletRepository.save(wallet);
+            return wallet;
     }
 
     public Wallet updateWallet(Long id, String coin, Double quantity) throws NotFoundException {
@@ -116,11 +118,11 @@ public class WalletService {
             Wallet wallet1 = wallet.get();
             CryptoCoin cCoin = cryptoService.getById(exchange);
             Double coinTotal = 0.0;
-            if (exchange.equalsIgnoreCase("eth")) {
+            if (coin.equalsIgnoreCase("usd")) {
                 Double ratio = cCoin.getDollarValue();
                 coinTotal = income * ratio;
 
-            } else if (exchange.equalsIgnoreCase("btc")) {
+            } else if (coin.equalsIgnoreCase("eur")) {
                 Double ratio = cCoin.getEuroValue();
                 coinTotal = income * ratio;
             }
