@@ -1,61 +1,47 @@
 package com.cristal.Crypto.entities;
 
 
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.UUID;
 
 
 @Entity
-@Table(name="wallet")
+@Table(name="wallets")
+@Getter
+@Setter
 public class Wallet {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty(notes = "Wallet identifier automatically generated", required = true,hidden = true)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @Column
     @NonNull
     private String walletName;
     @Column
-    private HashMap<String, Double> prices;
+    private HashMap<String, Double> balance;
 
-    public Wallet(String name) {
-        this.walletName = name;
-        this.prices = new HashMap<>();
-    }
-
-    public void setWalletName(String walletName) {
-        this.walletName = walletName;
+    public Wallet() {
+        this.balance = new HashMap<>();
     }
 
     public void setQuantity(String coin, Double quantity) {
-       prices.put(coin, quantity);
+       balance.put(coin, quantity);
     }
     public Boolean getCurrency(String coin){
-        return prices.containsKey(coin);
+        return balance.containsKey(coin);
     }
-
-    public Long getId() {
-        return id;
-    }
-    public Double getTotalCoin(String coin){
-        return prices.get(coin);
-    }
-
-    public HashMap<String, Double> getPrices() {
-        return prices;
-    }
-    public String stringPrices(){
-
-        return "sdf";
-    }
-    @Override
-    public String toString() {
-        return "Wallet{" +
-                "walletName ='" + walletName + '\'' +
-                ", prices=" + prices +
-                '}';
+    public Double getAllCoin(String coin){
+        return balance.get(coin);
     }
 }

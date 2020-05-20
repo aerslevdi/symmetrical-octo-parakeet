@@ -1,21 +1,37 @@
 package com.cristal.Crypto.services;
 
 import com.cristal.Crypto.entities.CryptoCoin;
+import com.cristal.Crypto.entities.ExchangeCoin;
 import com.cristal.Crypto.entities.Wallet;
 import com.cristal.Crypto.repositories.WalletRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import io.swagger.annotations.ExampleProperty;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+@Service
 public class WalletService {
     @Autowired
     private WalletRepository walletRepository;
+    @Autowired
     private CryptoCompareService cryptoService;
+    @Autowired
+    private EntityManager entityManager;
 
+    @Transactional(readOnly = true)
     public List<Wallet> getAll() throws NotFoundException{
         List<Wallet> walletList = walletRepository.findAll();
         if (walletList.isEmpty()) {
@@ -24,7 +40,7 @@ public class WalletService {
             return walletList;
         }
     }
-
+    @Transactional(readOnly = true)
     public Wallet getWalletById(Long id) throws NotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
         if (wallet.isPresent()) {
@@ -33,7 +49,7 @@ public class WalletService {
             throw new NotFoundException("No wallet record exist for given id");
         }
     }
-
+    @Transactional
     public void delete(Long id) throws NotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
@@ -43,100 +59,121 @@ public class WalletService {
             throw new NotFoundException("No wallet record exist for given id");
         }
     }
-
-    public Wallet createWallet(String name) throws NotFoundException {
-            Wallet wallet = new Wallet(name);
+    @Transactional
+    public Wallet createWallet(Wallet wallet) throws NotFoundException {
             walletRepository.save(wallet);
             return wallet;
     }
 
-    public Wallet updateWallet(Long id, String coin, Double quantity) throws NotFoundException {
+    @Transactional
+    public Wallet withdrawCoin(Long id, String coin, Double quantity) throws NotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
             Wallet wallet1 = wallet.get();
-            wallet1.getPrices().put(coin, quantity);
-
+            if(wallet1.getAllCoin(coin) != null){
+                Double base = wallet1.getAllCoin(coin);
+                quantity = base - quantity;
+            }
+            wallet1.getBalance().put(coin, quantity);
+            entityManager.merge(wallet1);
             return wallet1;
         } else {
             throw new NotFoundException("No wallet record exist for given id");
         }
     }
+    @Transactional
+    public Wallet depositCoin(Long id, String coin, Double quantity) throws NotFoundException {
+        Optional<Wallet> wallet = walletRepository.findById(id);
 
-    public Double getCoinBalance(Long id, String coin) throws NotFoundException{
+        if (wallet.isPresent()) {
+            Wallet wallet1 = wallet.get();
+            if(wallet1.getAllCoin(coin) != null){
+                Double base = wallet1.getAllCoin(coin);
+                quantity += base;
+            }
+            wallet1.getBalance().put(coin, quantity);
+            entityManager.merge(wallet1);
+            return wallet1;
+        } else {
+            throw new NotFoundException("No wallet record exist for given id");
+        }
+    }
+    @Transactional
+    public void updateWallet(Wallet wallet) throws NotFoundException{
+        Optional<Wallet> walletOpt = Optional.ofNullable(wallet);
+        if(walletOpt.isPresent() && getWalletById(wallet.getId())!=null){
+            entityManager.merge(walletOpt.get());
+        }
+
+    }
+
+    @Transactional(readOnly = true)
+    public String getCoinBalance(Long id, String coin) throws NotFoundException{
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
             Wallet wallet1 = wallet.get();
 
-            return wallet1.getPrices().get(coin);
+            return coin.toUpperCase() + " : " + wallet1.getBalance().get(coin);
         } else {
             throw new NotFoundException("No wallet record exist for given id");
         }
     }
 
+    @Transactional(readOnly = true)
     public String getFullBalance(Long id) throws NotFoundException{
         Optional<Wallet> wallet = walletRepository.findById(id);
-
         if (wallet.isPresent()) {
             Wallet wallet1 = wallet.get();
-
-            return wallet1.getPrices().toString();
+            return wallet1.getBalance().toString();
         } else {
             throw new NotFoundException("No wallet record exist for given id");
         }
     }
-
-    public String buyCryptoCurrency(Long id, Double income, String exchange,String coin) throws NotFoundException {
+    @Transactional
+    public String buyCryptoCurrency(Long id, Double quantity, String to, String from) throws NotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
         Double total = 0.0;
         if (wallet.isPresent()) {
             Wallet wallet1 = wallet.get();
-                    CryptoCoin cCoin = cryptoService.getById(coin);
-                    Double coinTotal = 0.0;
-                    if (exchange.equalsIgnoreCase("usd")) {
-                        Double ratio = cCoin.getDollarValue();
-                        coinTotal = income / ratio;
-
-                    } else if (exchange.equalsIgnoreCase("eur")) {
-                        Double ratio = cCoin.getEuroValue();
-                        coinTotal = income / ratio;
-                    }
-                    Double coinPrv = wallet1.getTotalCoin(coin);
-                    total = coinPrv + coinTotal;
-                    this.updateWallet(id, coin, total);
+            ExchangeCoin cCoin = cryptoService.getById(from, to);
+            Double ratio = cCoin.getExchangeRate();
+            total = quantity * ratio;
+            if(wallet1.getAllCoin(to) != null){
+            Double coinPrv = wallet1.getAllCoin(to);
+            total = coinPrv + total;}
+            wallet1.getBalance().put(to, total);
+            this.updateWallet(wallet1);
+            return "Your final " + quantity + " balance is: " + total;
         } else{
             throw new NotFoundException("Wallet not registered");
         }
-
-        return "Yor final " + coin + " balance is: " + total;
     }
-    public String sellCryptoCurrency(Long id, Double income, String exchange,String coin) throws NotFoundException {
-        Optional<Wallet> wallet = walletRepository.findById(id);
-        Double total = 0.0;
-        if (wallet.isPresent()) {
-            Wallet wallet1 = wallet.get();
-            CryptoCoin cCoin = cryptoService.getById(exchange);
-            Double coinTotal = 0.0;
-            if (coin.equalsIgnoreCase("usd")) {
-                Double ratio = cCoin.getDollarValue();
-                coinTotal = income * ratio;
-
-            } else if (coin.equalsIgnoreCase("eur")) {
-                Double ratio = cCoin.getEuroValue();
-                coinTotal = income * ratio;
+    @Transactional
+    public String transferCoins(Long idFrom, Long idTo, Double quantity, String coin) throws NotFoundException {
+        Optional<Wallet> wallet1 = walletRepository.findById(idFrom);
+        Optional<Wallet> wallet2 = walletRepository.findById(idTo);
+        try{
+        if(wallet1.isPresent() && wallet2.isPresent()){
+            Wallet walletFrom = wallet1.get();
+            if(walletFrom.getAllCoin(coin)>= quantity){
+                depositCoin(idTo, coin, quantity);
+                withdrawCoin(idFrom, coin, quantity);
             }
-            Double coinPrv = wallet1.getTotalCoin(coin);
-            total = coinPrv + coinTotal;
-            this.updateWallet(id, coin, total);
-        } else{
-            throw new NotFoundException("Wallet not registered");
+        }
+        return wallet2.get().getWalletName()+" new balance=> "+coin.toUpperCase()+ "= " + wallet2.get().getAllCoin(coin);
+        }catch(NotFoundException e){
+            throw new NotFoundException("Wallet not found");
         }
 
-        return "Yor final " + coin + " balance is: " + total;
+
     }
-
-
-
+    @Transactional
+    public Wallet applyPatchToXP(JsonPatch patch, Wallet wallet) throws JsonPatchException, JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode patched = patch.apply(objectMapper.convertValue(wallet, JsonNode.class));
+        return objectMapper.treeToValue(patched, Wallet.class);
+    }
 
 }

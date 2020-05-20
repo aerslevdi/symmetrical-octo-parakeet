@@ -2,43 +2,25 @@ package com.cristal.Crypto.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
+@Table(name = "cryptocoin")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@RequiredArgsConstructor
+@Getter
+@NoArgsConstructor
 public class CryptoCoin extends Currency {
     @Column
-    private double dollarValue;
+    @JsonProperty("Symbol")
+    private String symbol;
     @Column
-    private double euroValue;
-
-
-    @JsonProperty("USD")
-    public void setDollarValue(Double dollarValue) {
-        this.dollarValue = dollarValue;
-    }
-
-    @JsonProperty("EUR")
-    public void setEuroValue(Double euroValue) {
-        this.euroValue = euroValue;
-    }
-
-    public Double getDollarValue() {
-        return dollarValue;
-    }
-
-    public Double getEuroValue() {
-        return euroValue;
-    }
-
-    @Override
-    public String toString() {
-        return "CryptoCoin{" +
-                "dollarValue=" + dollarValue +
-                ", euroValue=" + euroValue +
-                '}';
-    }
+    @JsonProperty("Name")
+    private String name;
+    @Column
+    private Double price;
 }

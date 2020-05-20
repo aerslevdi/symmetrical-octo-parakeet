@@ -2,45 +2,62 @@ package com.cristal.Crypto.controllers;
 
 
 import com.cristal.Crypto.entities.Wallet;
+import com.cristal.Crypto.services.CryptoCompareService;
 import com.cristal.Crypto.services.WalletService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import javassist.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-@RestController
+@Controller
+@RequestMapping("/api")
 public class WalletController {
-
+    @Autowired
     WalletService walletService;
-    @GetMapping("/wallets")
-    public ResponseEntity<List<Wallet>> getAllWallet() throws NotFoundException {
-        List<Wallet> list = walletService.getAll();
 
-        return new ResponseEntity<>(list, new HttpHeaders(), HttpStatus.OK);
+    @GetMapping("/wallets/{id}")
+    public ResponseEntity<Wallet> getWalletById(@PathVariable Long id) throws NotFoundException {
+        Wallet wallet = walletService.getWalletById(id);
+
+        return new ResponseEntity<>(wallet, new HttpHeaders(), HttpStatus.OK);
     }
-    @PostMapping("/wallets/add/{name}")
-    public ResponseEntity<Wallet> addWallet(@PathVariable("name")String name) throws NotFoundException {
-        Wallet newWallet = walletService.createWallet(name);
+    @PostMapping("/wallets/")
+    public ResponseEntity<Wallet> addWallet(@RequestBody Wallet wallet) throws NotFoundException {
+        Wallet newWallet = walletService.createWallet(wallet);
         return new ResponseEntity<>(newWallet, new HttpHeaders(), HttpStatus.OK);
     }
 
-    @GetMapping("/wallets/{id}/{coin}/balance")
-    public ResponseEntity<String> getBalance(@PathVariable("id")Long id, @PathVariable("coin") String coin) throws NotFoundException {
-        if(walletService.getAll().contains(id)){
-            String total = "Your total balance of " + coin + " is: " + walletService.getCoinBalance(id, coin);
+    @DeleteMapping("/wallets/{id}")
+    public ResponseEntity<String> removeWallet(@PathVariable Long id) throws NotFoundException {
+        if(walletService.getWalletById(id) != null){
+         walletService.delete(id);}
+         String response = "The wallet was deleted";
+        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+    }
 
-            return new ResponseEntity<>(total, new HttpHeaders(), HttpStatus.OK);
-
-        }else {
-            throw new NotFoundException("Wallet not found");
+    @PatchMapping(path = "/wallets/{id}", consumes = "application/json-patch+json")
+    public ResponseEntity<Wallet> patchWallet(@PathVariable Long id, @RequestBody JsonPatch patch) {
+        try {
+            Wallet walletById = walletService.getWalletById(id);
+            Wallet walletPatched = walletService.applyPatchToXP(patch, walletById);
+            walletPatched.setId(id);
+            walletService.updateWallet(walletPatched);
+            return ResponseEntity.ok(walletPatched);
+        } catch (JsonPatchException | JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-
     }
 }
