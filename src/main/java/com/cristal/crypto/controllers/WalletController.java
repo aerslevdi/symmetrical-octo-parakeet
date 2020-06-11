@@ -9,6 +9,8 @@ import com.github.fge.jsonpatch.JsonPatchException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import java.util.List;
 public class WalletController {
     @Autowired
     WalletService walletService;
+    private static final Logger logger = LoggerFactory.getLogger(WalletController.class);
 
 
     /**
@@ -35,6 +38,7 @@ public class WalletController {
     @GetMapping("/wallets")
     public ResponseEntity<List<Wallet>> getALlWallets() throws NotFoundException{
         List walletsMap = walletService.getAll();
+        logger.info("Retrieving all wallets");
         return new ResponseEntity<>(walletsMap, new HttpHeaders(), HttpStatus.OK);
 
     }
@@ -49,7 +53,7 @@ public class WalletController {
     @GetMapping("/wallets/{id}")
     public ResponseEntity<Wallet> getWalletById(@PathVariable Long id) throws NotFoundException {
         Wallet wallet = walletService.getWalletById(id);
-
+        logger.info("Getting wallet by ID");
         return new ResponseEntity<>(wallet, new HttpHeaders(), HttpStatus.OK);
     }
     /**
@@ -62,6 +66,7 @@ public class WalletController {
     @PostMapping("/wallets")
     public ResponseEntity<Wallet> addWallet(@RequestBody Wallet wallet) throws NotFoundException {
         Wallet newWallet = walletService.createWallet(wallet);
+        logger.info("Creating wallet");
         return new ResponseEntity<>(newWallet, new HttpHeaders(), HttpStatus.OK);
     }
     /**
@@ -76,6 +81,7 @@ public class WalletController {
         if(walletService.getWalletById(id) != null){
          walletService.delete(id);}
          String response = "The wallet was deleted";
+        logger.info("Removing wallet");
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
     }
 
@@ -100,6 +106,7 @@ public class WalletController {
             Wallet walletPatched = walletService.applyPatchToXP(patch, walletById);
             walletPatched.setId(id);
             walletService.updateWallet(walletPatched);
+            logger.info("Updating wallet");
             return ResponseEntity.ok(walletPatched);
         } catch (JsonPatchException | JsonProcessingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

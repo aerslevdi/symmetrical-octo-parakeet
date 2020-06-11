@@ -7,6 +7,8 @@ import com.cristal.crypto.services.WalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,11 +23,11 @@ import org.springframework.web.bind.annotation.*;
 public class OperationController {
     @Autowired
     WalletService walletService;
+    private static final Logger logger = LoggerFactory.getLogger(OperationController.class);
     /**
      *
      * @param id = ID from wallet
-     * @param from = ID from initial currency
-     * @param to = ID from exchange target currency
+     * @param exchangeDTO = body with information for exchange
      * @requestparam quantity = Quantity of initial currency you want to trade
      * @return String with resulting balance of target currency
      * @throws NotFoundException

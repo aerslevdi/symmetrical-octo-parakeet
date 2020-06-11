@@ -5,6 +5,8 @@ import com.cristal.crypto.services.CryptoCompareService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class CoinController {
     @Autowired
     CryptoCompareService cryptoService;
+    private static final Logger logger = LoggerFactory.getLogger(CoinController.class);
 
     /**
      *
@@ -32,6 +35,7 @@ public class CoinController {
     @GetMapping("/cryptocoins")
     public ResponseEntity<?> getAll(@RequestParam Optional<String>  convert)
             throws NotFoundException {
+        logger.info("Getting all cryptocoins and its value in ");
         return new ResponseEntity<>(cryptoService.getAll(convert.orElse("USD")), new HttpHeaders(), HttpStatus.OK);
     }
 
