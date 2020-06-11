@@ -20,18 +20,35 @@ import org.springframework.web.bind.annotation.*;
 public class OperationController {
     @Autowired
     WalletService walletService;
-
-    @ApiOperation(value = "Buy cryptocoins")
+    /**
+     *
+     * @param id = ID from wallet
+     * @param from = ID from initial currency
+     * @param to = ID from exchange target currency
+     * @requestparam quantity = Quantity of initial currency you want to trade
+     * @return String with resulting balance of target currency
+     * @throws NotFoundException
+     */
+    @ApiOperation(value = "Buy cryptocoins", response=String.class)
     @PostMapping("/wallets/buy/{id}/{from}/{to}")
-    public ResponseEntity<String > buyCoin(@PathVariable Long id, @PathVariable String from, @PathVariable String to, @RequestParam String quantity) throws NotFoundException {
+    public ResponseEntity<String> buyCoin(@PathVariable Long id, @PathVariable String from, @PathVariable String to, @RequestParam String quantity) throws NotFoundException {
         Double q = Double.parseDouble(quantity);
-        walletService.buyCryptoCurrency((id), q, from, to);
+        walletService.buyCryptoCurrency(id, q, from, to);
         Wallet wallet = walletService.getWalletById(id);
         String response = "Your " + to.toUpperCase() + " balance: " + wallet.getBalance().get(to);
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
     }
-    @ApiOperation(value = "Transfer from one wallet to another")
+    /**
+     *
+     * @param idFrom = ID from wallet doing the transfer
+     * @param idTo = ID from wallet receiving the transfer
+     * @param coin = ID from exchange target currency
+     * @param quantity = Quantity of initial currency you want to trade
+     * @return String with new balance of the wallet receiving the transfer
+     * @throws NotFoundException
+     */
+    @ApiOperation(value = "Transfer from one wallet to another", response=String.class)
     @PostMapping("/wallets/transfer/{idFrom}/{idTo}/{coin}")
     public ResponseEntity<String > transfer(@PathVariable Long idFrom, @PathVariable Long idTo, @PathVariable String coin, @RequestParam String quantity) throws NotFoundException {
         Double q = Double.parseDouble(quantity);

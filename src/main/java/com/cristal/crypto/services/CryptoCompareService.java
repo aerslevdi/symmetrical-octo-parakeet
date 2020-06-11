@@ -3,6 +3,7 @@ package com.cristal.crypto.services;
 
 import com.cristal.crypto.dto.CoinDTO;
 import com.cristal.crypto.entities.ExchangeCoin;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,12 @@ public class CryptoCompareService{
     RestTemplate restTemplate;
     public static final String API_URL = "https://min-api.cryptocompare.com/data/";
 
+    /**
+     *
+     * @param convert = ID of currency for exchange
+     * @return List of cryptocurrency and its value in the provided by parameter currency
+     * @throws NotFoundException
+     */
     @Cacheable("allCoins")
     public LinkedHashMap getAll(String convert)  {
         LinkedHashMap cryptoCoin = restTemplate.getForObject(
@@ -51,13 +58,21 @@ public class CryptoCompareService{
             }
             return relationPrice;
     }
+
+    /**
+     *
+     * @param from = ID of currency for exchange
+     * @param to = ID of target currency
+     * @return ExchangeCoin
+     * @throws NotFoundException
+     */
     public ExchangeCoin getById(String from, String to)  {
+        String fromUC = from.toUpperCase();
+        String toUC = to.toUpperCase();
         ExchangeCoin cryptoCoins = new ExchangeCoin();
-        to.toUpperCase();
-        from.toUpperCase();
         LinkedHashMap<String, Double> coin = restTemplate.getForObject(
                 API_URL+ "price?fsym=" +from+"&tsyms=" + to, LinkedHashMap.class);
-        cryptoCoins.setExchangeRate(coin.get(from.toUpperCase()));
+        cryptoCoins.setExchangeRate(coin.get(to));
         cryptoCoins.setName(to);
         cryptoCoins.setExchangeCoin(from);
         return cryptoCoins;
