@@ -1,6 +1,7 @@
 package com.cristal.crypto.controllers;
 
 
+import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.entities.Wallet;
 import com.cristal.crypto.services.WalletService;
 import io.swagger.annotations.Api;
@@ -31,11 +32,10 @@ public class OperationController {
      */
     @ApiOperation(value = "Buy cryptocoins", response=String.class)
     @PostMapping("/wallets/buy/{id}/{from}/{to}")
-    public ResponseEntity<String> buyCoin(@PathVariable Long id, @PathVariable String from, @PathVariable String to, @RequestParam String quantity) throws NotFoundException {
-        Double q = Double.parseDouble(quantity);
-        walletService.buyCryptoCurrency(id, q, from, to);
+    public ResponseEntity<String> buyCoin(@PathVariable Long id, @RequestBody ExchangeDTO exchangeDTO) throws Exception {
+        walletService.buyCryptoCurrency(id, exchangeDTO);
         Wallet wallet = walletService.getWalletById(id);
-        String response = "Your " + to.toUpperCase() + " balance: " + wallet.getBalance().get(to);
+        String response = "Your " + exchangeDTO.getName().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getName());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
     }

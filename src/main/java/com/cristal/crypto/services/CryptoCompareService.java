@@ -1,8 +1,8 @@
 package com.cristal.crypto.services;
 
 
+import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.dto.CoinDTO;
-import com.cristal.crypto.entities.ExchangeCoin;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,13 +31,10 @@ public class CryptoCompareService{
                 API_URL + "all/coinlist" , LinkedHashMap.class);
             LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String >>> dict = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String >>>) cryptoCoin;
             LinkedHashMap<String, LinkedHashMap<String, String >> coins = dict.get("Data");
-            Set<String> keys = coins.keySet();
             ArrayList<String> coinSymbols = new ArrayList<>();
-            for (String key : keys){
-                coinSymbols.add(key);
-            }
+            coins.forEach((key, value) -> coinSymbols.add(key));
 
-            String totalUrl = API_URL + "price?fsym=" + convert +"&tsyms=";
+        String totalUrl = API_URL + "price?fsym=" + convert +"&tsyms=";
             int start = 0;
             int end = 100;
             CoinDTO coinDTO = new CoinDTO();
@@ -61,20 +58,17 @@ public class CryptoCompareService{
 
     /**
      *
-     * @param from = ID of currency for exchange
-     * @param to = ID of target currency
-     * @return ExchangeCoin
+     *
+     * @return ExchangeDTO
      * @throws NotFoundException
      */
-    public ExchangeCoin getById(String from, String to)  {
-        String fromUC = from.toUpperCase();
-        String toUC = to.toUpperCase();
-        ExchangeCoin cryptoCoins = new ExchangeCoin();
+    public ExchangeDTO getById(ExchangeDTO cBDTO)  {
+        String fromUC = cBDTO.getExchange().toUpperCase();
+        String toUC = cBDTO.getName().toUpperCase();
+        ExchangeDTO cryptoCoins = new ExchangeDTO();
         LinkedHashMap<String, Double> coin = restTemplate.getForObject(
-                API_URL+ "price?fsym=" +from+"&tsyms=" + to, LinkedHashMap.class);
-        cryptoCoins.setExchangeRate(coin.get(to));
-        cryptoCoins.setName(to);
-        cryptoCoins.setExchangeCoin(from);
+                API_URL+ "price?fsym=" +fromUC+"&tsyms=" + toUC, LinkedHashMap.class);
+        cryptoCoins.setPrice(coin.get(toUC));
         return cryptoCoins;
     }
 

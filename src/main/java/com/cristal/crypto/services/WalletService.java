@@ -1,6 +1,6 @@
 package com.cristal.crypto.services;
 
-import com.cristal.crypto.entities.ExchangeCoin;
+import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.entities.Wallet;
 import com.cristal.crypto.repositories.WalletRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -187,25 +187,30 @@ public class WalletService {
     /**
      *
      * @param id = ID of wallet
-     * @param quantity = quantity of currency being exchanged
-     * @param from = ID of currency being exchanged
-     * @param to = ID of target currency in the exchange
      * @throws NotFoundException
      */
     @Transactional
-    public void buyCryptoCurrency(Long id, Double quantity, String from, String to) throws NotFoundException {
+    public void buyCryptoCurrency(Long id, ExchangeDTO exchangeDTO) throws Exception {
         Optional<Wallet> walletOpt = walletRepository.findById(id);
         Double total = 0.0;
         if (walletOpt.isPresent()) {
             Wallet wallet = walletOpt.get();
-            ExchangeCoin cCoin = cryptoService.getById(from, to);
-            Double ratio = cCoin.getExchangeRate();
-            total = quantity * ratio;
-            if(wallet.getAllCoin(to) != null){
-            Double coinPrv = wallet.getAllCoin(to);
+            ExchangeDTO cCoin = cryptoService.getById(exchangeDTO);
+            Double ratio = cCoin.getPrice();
+            Double available = wallet.getAllCoin(exchangeDTO.getExchange());
+            if(available >= exchangeDTO.getQuantity()){
+            total = exchangeDTO.getQuantity() * ratio;
+                System.out.println("available: "+ available);
+            Double balance = available - exchangeDTO.getQuantity();
+            wallet.getBalance().put(exchangeDTO.getExchange(), balance);
+            if(wallet.getAllCoin(exchangeDTO.getName()) != null){
+            Double coinPrv = wallet.getAllCoin(exchangeDTO.getName());
             total = coinPrv + total;}
-            wallet.getBalance().put(to, total);
-            this.updateWallet(wallet);
+            wallet.getBalance().put(exchangeDTO.getName(), total);
+            this.updateWallet(wallet);}
+            else{
+                throw new Exception("No amount available for transaction");
+            }
         } else{
             throw new NotFoundException("Wallet not registered");
         }
