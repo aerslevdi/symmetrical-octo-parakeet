@@ -34,6 +34,7 @@ public class WalletController {
      * @return List of all existing wallets
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @ApiOperation(value = "Get list of all wallets")
     @GetMapping("/wallets")
     public ResponseEntity<List<Wallet>> getALlWallets() throws NotFoundException{
@@ -49,6 +50,7 @@ public class WalletController {
      * @return Wallet with same ID as passed by parameter
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @ApiOperation(value = "Get wallet by its ID", response=Wallet.class)
     @GetMapping("/wallets/{id}")
     public ResponseEntity<Wallet> getWalletById(@PathVariable Long id) throws NotFoundException {
@@ -62,6 +64,7 @@ public class WalletController {
      * @return created wallet with ID
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @ApiOperation(value = "Create new wallet")
     @PostMapping("/wallets")
     public ResponseEntity<Wallet> addWallet(@RequestBody Wallet wallet) throws NotFoundException {
@@ -75,6 +78,7 @@ public class WalletController {
      * @return String indicating success in deleting wallet
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @ApiOperation(value = "Delete an existing wallet")
     @DeleteMapping("/wallets/{id}")
     public ResponseEntity<String> removeWallet(@PathVariable Long id) throws NotFoundException {
@@ -98,6 +102,7 @@ public class WalletController {
      * ]
      * @return updated wallet
      */
+    //TODO change to DTO
     @ApiOperation(value = "Update an existing wallet", response=Wallet.class)
     @PatchMapping(path = "/wallets/{id}", consumes = "application/json-patch+json")
     public ResponseEntity<Wallet> patchWallet(@PathVariable Long id, @RequestBody JsonPatch patch) {

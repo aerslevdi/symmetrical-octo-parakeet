@@ -25,7 +25,7 @@ public class WalletTest {
     private int port;
     @Autowired
     private TestRestTemplate restTemplate;
-    @Mock
+    @Autowired
     private WalletRepository walletRepository;
     private LinkedHashMap<String, Double> balance = new LinkedHashMap<>();
 

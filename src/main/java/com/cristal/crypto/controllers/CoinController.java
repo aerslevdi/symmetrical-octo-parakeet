@@ -31,11 +31,12 @@ public class CoinController {
      * @return List of cryptocoin and their rate either in default USD or requested by parameter exchange
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @ApiOperation(value = "Return all Crytocoins value in USD by default", response= List.class)
     @GetMapping("/cryptocoins")
     public ResponseEntity<?> getAll(@RequestParam Optional<String>  convert)
             throws NotFoundException {
-        logger.info("Getting all cryptocoins and its value in ");
+        logger.info("Getting all cryptocoins and its value in " + convert);
         return new ResponseEntity<>(cryptoService.getAll(convert.orElse("USD")), new HttpHeaders(), HttpStatus.OK);
     }
 

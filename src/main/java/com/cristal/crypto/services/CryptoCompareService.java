@@ -25,13 +25,14 @@ public class CryptoCompareService{
      * @return List of cryptocurrency and its value in the provided by parameter currency
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @Cacheable("allCoins")
     public LinkedHashMap getAll(String convert)  {
         LinkedHashMap cryptoCoin = restTemplate.getForObject(
                 API_URL + "all/coinlist" , LinkedHashMap.class);
             LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String >>> dict = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String >>>) cryptoCoin;
             LinkedHashMap<String, LinkedHashMap<String, String >> coins = dict.get("Data");
-            ArrayList<String> coinSymbols = new ArrayList<>();
+            ArrayList<String> coinSymbols = new ArrayList<>(coins.size());
             coins.forEach((key, value) -> coinSymbols.add(key));
 
         String totalUrl = API_URL + "price?fsym=" + convert +"&tsyms=";
@@ -62,9 +63,10 @@ public class CryptoCompareService{
      * @return ExchangeDTO
      * @throws NotFoundException
      */
+    //TODO change to DTO
     public ExchangeDTO getById(ExchangeDTO cBDTO)  {
-        String fromUC = cBDTO.getExchange().toUpperCase();
-        String toUC = cBDTO.getName().toUpperCase();
+        String fromUC = cBDTO.getExchangeFrom().toUpperCase();
+        String toUC = cBDTO.getExchangeTo().toUpperCase();
         ExchangeDTO cryptoCoins = new ExchangeDTO();
         LinkedHashMap<String, Double> coin = restTemplate.getForObject(
                 API_URL+ "price?fsym=" +fromUC+"&tsyms=" + toUC, LinkedHashMap.class);

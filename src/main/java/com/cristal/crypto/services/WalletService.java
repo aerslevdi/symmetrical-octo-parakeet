@@ -1,6 +1,7 @@
 package com.cristal.crypto.services;
 
 import com.cristal.crypto.dto.ExchangeDTO;
+import com.cristal.crypto.dto.TransferDTO;
 import com.cristal.crypto.entities.Wallet;
 import com.cristal.crypto.repositories.WalletRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -173,6 +174,7 @@ public class WalletService {
      * @return full balance of consulted wallet
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @Transactional(readOnly = true)
     public String getFullBalance(Long id) throws NotFoundException{
         Optional<Wallet> wallet = walletRepository.findById(id);
@@ -186,27 +188,27 @@ public class WalletService {
 
     /**
      *
-     * @param id = ID of wallet
      * @throws NotFoundException
      */
+    //TODO change to DTO
     @Transactional
-    public void buyCryptoCurrency(Long id, ExchangeDTO exchangeDTO) throws Exception {
-        Optional<Wallet> walletOpt = walletRepository.findById(id);
+    public void buyCryptoCurrency(ExchangeDTO exchangeDTO) throws Exception {
+        Optional<Wallet> walletOpt = walletRepository.findById(exchangeDTO.getWalletID());
         Double total = 0.0;
         if (walletOpt.isPresent()) {
             Wallet wallet = walletOpt.get();
             ExchangeDTO cCoin = cryptoService.getById(exchangeDTO);
             Double ratio = cCoin.getPrice();
-            Double available = wallet.getAllCoin(exchangeDTO.getExchange());
+            Double available = wallet.getAllCoin(exchangeDTO.getExchangeFrom());
             if(available >= exchangeDTO.getQuantity()){
             total = exchangeDTO.getQuantity() * ratio;
                 System.out.println("available: "+ available);
             Double balance = available - exchangeDTO.getQuantity();
-            wallet.getBalance().put(exchangeDTO.getExchange(), balance);
-            if(wallet.getAllCoin(exchangeDTO.getName()) != null){
-            Double coinPrv = wallet.getAllCoin(exchangeDTO.getName());
+            wallet.getBalance().put(exchangeDTO.getExchangeFrom(), balance);
+            if(wallet.getAllCoin(exchangeDTO.getExchangeTo()) != null){
+            Double coinPrv = wallet.getAllCoin(exchangeDTO.getExchangeTo());
             total = coinPrv + total;}
-            wallet.getBalance().put(exchangeDTO.getName(), total);
+            wallet.getBalance().put(exchangeDTO.getExchangeTo(), total);
             this.updateWallet(wallet);}
             else{
                 throw new Exception("No amount available for transaction");
@@ -218,25 +220,21 @@ public class WalletService {
 
     /**
      *
-     * @param idFrom = ID of wallet transferring
-     * @param quantity = quantity of currency being exchanged
-     * @param idTo = ID of wallet receiving the transfer
-     * @param coin = ID of currency being transferred
      * @throws NotFoundException
      */
     @Transactional
-    public String transferCoins(Long idFrom, Long idTo, Double quantity, String coin) throws NotFoundException {
-        Optional<Wallet> wallet1 = walletRepository.findById(idFrom);
-        Optional<Wallet> wallet2 = walletRepository.findById(idTo);
+    public String transferCoins(TransferDTO transferDTO) throws NotFoundException {
+        Optional<Wallet> wallet1 = walletRepository.findById(transferDTO.getFromWalletID());
+        Optional<Wallet> wallet2 = walletRepository.findById(transferDTO.getToWalletID());
         try{
         if(wallet1.isPresent() && wallet2.isPresent()){
             Wallet walletFrom = wallet1.get();
-            if(walletFrom.getAllCoin(coin)>= quantity){
-                depositCoin(idTo, coin, quantity);
-                withdrawCoin(idFrom, coin, quantity);
+            if(walletFrom.getAllCoin(transferDTO.getCoin())>= transferDTO.getQuantity()){
+                depositCoin(transferDTO.getToWalletID(), transferDTO.getCoin(), transferDTO.getQuantity());
+                withdrawCoin(transferDTO.getFromWalletID(), transferDTO.getCoin(), transferDTO.getQuantity());
             }
         }
-        return wallet2.get().getWalletName()+" new balance=> "+coin.toUpperCase()+ "= " + wallet2.get().getAllCoin(coin);
+        return wallet2.get().getWalletName()+" new balance=> "+transferDTO.getCoin().toUpperCase()+ "= " + wallet2.get().getAllCoin(transferDTO.getCoin());
         }catch(NotFoundException e){
             throw new NotFoundException("Wallet not found");
         }

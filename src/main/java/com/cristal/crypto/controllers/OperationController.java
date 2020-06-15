@@ -33,11 +33,11 @@ public class OperationController {
      * @throws NotFoundException
      */
     @ApiOperation(value = "Buy cryptocoins", response=String.class)
-    @PostMapping("/wallets/buy/{id}/{from}/{to}")
-    public ResponseEntity<String> buyCoin(@PathVariable Long id, @RequestBody ExchangeDTO exchangeDTO) throws Exception {
-        walletService.buyCryptoCurrency(id, exchangeDTO);
-        Wallet wallet = walletService.getWalletById(id);
-        String response = "Your " + exchangeDTO.getName().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getName());
+    @PostMapping("/wallets/buy/{id}")
+    public ResponseEntity<String> buyCoin(@RequestBody ExchangeDTO exchangeDTO) throws Exception {
+        walletService.buyCryptoCurrency(exchangeDTO);
+        Wallet wallet = walletService.getWalletById(exchangeDTO.getWalletID());
+        String response = "Your " + exchangeDTO.getExchangeTo().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getExchangeTo());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
     }
@@ -50,6 +50,8 @@ public class OperationController {
      * @return String with new balance of the wallet receiving the transfer
      * @throws NotFoundException
      */
+
+    //TODO change to DTO
     @ApiOperation(value = "Transfer from one wallet to another", response=String.class)
     @PostMapping("/wallets/transfer/{idFrom}/{idTo}/{coin}")
     public ResponseEntity<String > transfer(@PathVariable Long idFrom, @PathVariable Long idTo, @PathVariable String coin, @RequestParam String quantity) throws NotFoundException {
