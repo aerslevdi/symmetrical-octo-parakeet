@@ -164,14 +164,12 @@ public class WalletController {
     )
     @ApiOperation(value = "Full update an existing wallet")
     @PutMapping("/wallets/{id}")
-    public ResponseEntity<WalletDTO> updateWallet(@RequestBody WalletDTO walletDTO) throws NotFoundException {
-        Wallet wallet = walletService.getWalletById(walletDTO.getId());
-
-        Wallet newWallet = new Wallet();
-        newWallet.setId(walletDTO.getId());
-        newWallet.setWalletName(walletDTO.getName());
-        newWallet.setBalance(walletDTO.getBalance());
-        walletService.updateWallet(newWallet);
+    public ResponseEntity<WalletDTO> updateWallet(@PathVariable Long id, @RequestBody WalletDTO walletDTO) throws NotFoundException {
+        Wallet wallet = walletService.getWalletById(id);
+        wallet.setId(walletDTO.getId());
+        wallet.setWalletName(walletDTO.getName());
+        wallet.setBalance(walletDTO.getBalance());
+        walletService.updateWallet(wallet);
         logger.info("Updating wallet by PUT");
         return new ResponseEntity<>(walletDTO, HttpStatus.CREATED);
 
