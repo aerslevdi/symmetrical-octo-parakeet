@@ -16,7 +16,7 @@ public class WalletDTO implements Serializable {
     private Long id;
     @ApiModelProperty(notes = "Wallet name")
     private String name;
-    @ApiModelProperty(notes = "Balance of wallet")
+    @ApiModelProperty(notes = "Wallet balance: coin, quantity", example = "{BTC : 50.0, USD: 50.0 }")
     private HashMap<String, Double> balance;
 
     public WalletDTO() {
