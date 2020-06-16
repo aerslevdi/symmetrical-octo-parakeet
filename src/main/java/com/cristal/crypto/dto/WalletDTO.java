@@ -12,7 +12,7 @@ import java.util.HashMap;
 @Getter
 @Setter
 public class WalletDTO implements Serializable {
-    @ApiModelProperty(notes = "Wallet ID", required = true)
+    @ApiModelProperty(notes = "Wallet ID", required = true, hidden = true)
     private Long id;
     @ApiModelProperty(notes = "Wallet name")
     private String name;
