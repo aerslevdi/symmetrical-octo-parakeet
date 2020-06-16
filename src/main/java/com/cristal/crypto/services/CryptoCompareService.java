@@ -3,6 +3,7 @@ package com.cristal.crypto.services;
 
 import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.dto.CoinDTO;
+import com.cristal.crypto.exception.ElementNotFoundException;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,7 +26,6 @@ public class CryptoCompareService{
      * @return List of cryptocurrency and its value in the provided by parameter currency
      * @throws NotFoundException
      */
-    //TODO change to DTO
     @Cacheable("allCoins")
     public LinkedHashMap getAll(String convert)  {
         LinkedHashMap cryptoCoin = restTemplate.getForObject(
@@ -63,15 +63,21 @@ public class CryptoCompareService{
      * @return ExchangeDTO
      * @throws NotFoundException
      */
-    //TODO change to DTO
-    public ExchangeDTO getById(ExchangeDTO cBDTO)  {
+    public ExchangeDTO getById(ExchangeDTO cBDTO)  throws ElementNotFoundException {
         String fromUC = cBDTO.getExchangeFrom().toUpperCase();
         String toUC = cBDTO.getExchangeTo().toUpperCase();
         ExchangeDTO cryptoCoins = new ExchangeDTO();
-        LinkedHashMap<String, Double> coin = restTemplate.getForObject(
-                API_URL+ "price?fsym=" +fromUC+"&tsyms=" + toUC, LinkedHashMap.class);
-        cryptoCoins.setPrice(coin.get(toUC));
-        return cryptoCoins;
+        LinkedHashMap<String, Double> coin;
+        try {
+             coin = restTemplate.getForObject(
+                    API_URL+ "price?fsym=" +fromUC+"&tsyms=" + toUC, LinkedHashMap.class);
+             cryptoCoins.setPrice(coin.get(toUC));
+             return cryptoCoins;
+        }catch(ElementNotFoundException ex){
+            throw new ElementNotFoundException(ex.getMessage());
+        }
+
+
     }
 
 

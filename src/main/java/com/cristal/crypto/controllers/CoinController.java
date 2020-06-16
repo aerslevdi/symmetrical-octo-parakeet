@@ -4,6 +4,8 @@ package com.cristal.crypto.controllers;
 import com.cristal.crypto.services.CryptoCompareService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import javassist.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +33,12 @@ public class CoinController {
      * @return List of cryptocoin and their rate either in default USD or requested by parameter exchange
      * @throws NotFoundException
      */
-    //TODO change to DTO
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "Coins retrieved successfully"),
+                    @ApiResponse(code = 400, message = "There is missing or wrong information")
+            }
+    )
     @ApiOperation(value = "Return all Crytocoins value in USD by default", response= List.class)
     @GetMapping("/cryptocoins")
     public ResponseEntity<?> getAll(@RequestParam Optional<String>  convert)
