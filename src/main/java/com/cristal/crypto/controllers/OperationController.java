@@ -1,12 +1,11 @@
 package com.cristal.crypto.controllers;
 
 
-import com.cristal.crypto.dto.CoinDTO;
 import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.dto.TransferDTO;
 import com.cristal.crypto.dto.WalletDTO;
-import com.cristal.crypto.entities.CryptoCoin;
-import com.cristal.crypto.entities.Wallet;
+import com.cristal.crypto.exception.ConflictException;
+import com.cristal.crypto.exception.ElementNotFoundException;
 import com.cristal.crypto.services.WalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,10 +47,10 @@ public class OperationController {
             }
     )
     @ApiOperation(value = "Buy cryptocoins", response=String.class)
-    @PostMapping("/wallets/buy/{id}")
-    public ResponseEntity<String> buyCoin(@RequestBody ExchangeDTO exchangeDTO) throws Exception {
+    @PostMapping("/wallets/buy")
+    public ResponseEntity<String> buyCoin(@RequestBody ExchangeDTO exchangeDTO) throws ConflictException {
         walletService.buyCryptoCurrency(exchangeDTO);
-        Wallet wallet = walletService.getWalletById(exchangeDTO.getWalletID());
+        WalletDTO wallet = walletService.getWalletById(exchangeDTO.getWalletID());
         String response = "Your " + exchangeDTO.getExchangeTo().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getExchangeTo());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
@@ -60,7 +59,7 @@ public class OperationController {
      *
      *
      * @return String with new balance of the wallet receiving the transfer
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
 
     @ApiResponses(
@@ -70,8 +69,8 @@ public class OperationController {
             }
     )
     @ApiOperation(value = "Transfer from one wallet to another", response=String.class)
-    @PostMapping("/wallets/transfer/{idFrom}/{idTo}/{coin}")
-    public ResponseEntity<String > transfer(@RequestBody TransferDTO transferDTO) throws NotFoundException {
+    @PostMapping("/wallets/transfer")
+    public ResponseEntity<String > transfer(@RequestBody TransferDTO transferDTO) throws ElementNotFoundException {
         String response = walletService.transferCoins(transferDTO);
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 

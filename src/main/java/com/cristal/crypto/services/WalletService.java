@@ -1,8 +1,12 @@
 package com.cristal.crypto.services;
 
+import com.cristal.crypto.controllers.WalletController;
 import com.cristal.crypto.dto.ExchangeDTO;
 import com.cristal.crypto.dto.TransferDTO;
+import com.cristal.crypto.dto.WalletDTO;
 import com.cristal.crypto.entities.Wallet;
+import com.cristal.crypto.exception.ConflictException;
+import com.cristal.crypto.exception.ElementNotFoundException;
 import com.cristal.crypto.repositories.WalletRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,14 +14,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import javassist.NotFoundException;
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class WalletService {
@@ -26,19 +33,21 @@ public class WalletService {
     @Autowired
     private CryptoCompareService cryptoService;
     @Autowired
-    private EntityManager entityManager;
+    private ModelMapper modelMapper;
+    private static final Logger logger = LoggerFactory.getLogger(WalletController.class);
     /**
      *
      * @return List of all existing wallets
      * @throws NotFoundException
      */
     @Transactional(readOnly = true)
-    public List<Wallet> getAll() throws NotFoundException{
+    public List<WalletDTO> getAll() throws ElementNotFoundException{
         List<Wallet> walletList = walletRepository.findAll();
         if (walletList.isEmpty()) {
             return new ArrayList<>();
         } else {
-            return walletList;
+            List<WalletDTO> walletsDTO = walletList.stream().map(this::convertToDto).collect(Collectors.toList());
+            return walletsDTO;
         }
     }
     /**
@@ -48,39 +57,49 @@ public class WalletService {
      * @throws NotFoundException
      */
     @Transactional(readOnly = true)
-    public Wallet getWalletById(Long id) throws NotFoundException {
+    public WalletDTO getWalletById(Long id) throws ElementNotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
         if (wallet.isPresent()) {
-            return wallet.get();
+            return convertToDto(wallet.get());
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            ElementNotFoundException ex =  new ElementNotFoundException("No wallet record exist for given id");
+            logger.error(ex.getMessage());
+            throw ex;
         }
     }
     /**
      *
      * @param id = ID of wallet to delte
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional
-    public void delete(Long id) throws NotFoundException {
+    public void delete(Long id) throws ElementNotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
             walletRepository.deleteById(id);
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            ElementNotFoundException ex =  new ElementNotFoundException("No wallet record exist for given id");
+            logger.error(ex.getMessage());
+            throw ex;
         }
     }
     /**
      *
-     * @param wallet = new wallet
+     * @param walletDTO = new wallet
      * @return new wallet with ID
      * @throws NotFoundException
      */
     @Transactional
-    public Wallet createWallet(Wallet wallet) throws NotFoundException {
-            walletRepository.save(wallet);
-            return wallet;
+    public WalletDTO createWallet(WalletDTO walletDTO) throws ElementNotFoundException {
+        try{
+            Wallet wallet = walletRepository.save(convertToEntity(walletDTO));
+            System.out.println(wallet.toString());
+            return convertToDto(wallet);}
+        catch (ElementNotFoundException ex){
+            logger.error(ex.getMessage());
+            throw new ElementNotFoundException("No wallet record exist for given id");
+        }
     }
     /**
      *
@@ -91,7 +110,7 @@ public class WalletService {
      * @throws NotFoundException
      */
     @Transactional
-    public Wallet withdrawCoin(Long id, String coin, Double quantity) throws NotFoundException {
+    public Wallet withdrawCoin(Long id, String coin, Double quantity) throws ElementNotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
@@ -101,10 +120,12 @@ public class WalletService {
                 quantity = base - quantity;
             }
             wallet1.getBalance().put(coin, quantity);
-            entityManager.merge(wallet1);
+            walletRepository.save(wallet1);
             return wallet1;
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            ElementNotFoundException ex =  new ElementNotFoundException("No wallet record exist for given id");
+            logger.error(ex.getMessage());
+            throw ex;
         }
     }
     /**
@@ -113,10 +134,10 @@ public class WalletService {
      * @param coin = ID of currency being deposited
      * @param quantity = quantity of currency being deposited
      * @return List of cryptocurrency and its value in the provided by parameter currency
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional
-    public Wallet depositCoin(Long id, String coin, Double quantity) throws NotFoundException {
+    public Wallet depositCoin(Long id, String coin, Double quantity) throws ElementNotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
@@ -126,22 +147,29 @@ public class WalletService {
                 quantity += base;
             }
             wallet1.getBalance().put(coin, quantity);
-            entityManager.merge(wallet1);
+            walletRepository.save(wallet1);
             return wallet1;
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            throw new ElementNotFoundException("No wallet record exist for given id");
         }
     }
     /**
      *
-     * @param wallet = wallet being updated
-     * @throws NotFoundException
+     * @param walletDTO = wallet being updated
+     * @throws ElementNotFoundException
      */
     @Transactional
-    public void updateWallet(Wallet wallet) throws NotFoundException{
-        Optional<Wallet> walletOpt = Optional.ofNullable(wallet);
-        if(walletOpt.isPresent() && getWalletById(wallet.getId())!=null){
-            entityManager.merge(walletOpt.get());
+    public void updateWallet(WalletDTO walletDTO) throws ElementNotFoundException{
+        Optional<WalletDTO> walletOpt = Optional.ofNullable(walletDTO);
+        if(walletOpt.isPresent() && getWalletById(walletDTO.getId())!=null){
+            Wallet wallet = convertToEntity(walletOpt.get());
+            walletRepository.findById(wallet.getId())
+                    .map(walletTemp -> {
+                        walletTemp.setWalletName(wallet.getWalletName());
+                        walletTemp.setBalance(wallet.getBalance());
+                        walletTemp.setId(wallet.getId());
+                        return convertToDto(walletRepository.save(walletTemp));
+                    });
         }
 
     }
@@ -150,10 +178,10 @@ public class WalletService {
      * @param id = ID of wallet
      * @param coin = ID of currency being consulted
      * @return String informing balance of consulted currency
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional(readOnly = true)
-    public String getCoinBalance(Long id, String coin) throws NotFoundException{
+    public String getCoinBalance(Long id, String coin) throws ElementNotFoundException{
         Optional<Wallet> wallet = walletRepository.findById(id);
 
         if (wallet.isPresent()) {
@@ -164,7 +192,7 @@ public class WalletService {
                 return coin.toUpperCase() + ": 0.0";
             }
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            throw new ElementNotFoundException("No wallet record exist for given id");
         }
     }
 
@@ -172,27 +200,25 @@ public class WalletService {
      *
      * @param id = ID of wallet
      * @return full balance of consulted wallet
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
-    //TODO change to DTO
     @Transactional(readOnly = true)
-    public String getFullBalance(Long id) throws NotFoundException{
+    public String getFullBalance(Long id) throws ElementNotFoundException{
         Optional<Wallet> wallet = walletRepository.findById(id);
         if (wallet.isPresent()) {
             Wallet wallet1 = wallet.get();
             return wallet1.getBalance().toString();
         } else {
-            throw new NotFoundException("No wallet record exist for given id");
+            throw new ElementNotFoundException("No wallet record exist for given id");
         }
     }
 
     /**
      *
-     * @throws NotFoundException
+     * @throws ConflictException
      */
-    //TODO change to DTO
     @Transactional
-    public void buyCryptoCurrency(ExchangeDTO exchangeDTO) throws Exception {
+    public void buyCryptoCurrency(ExchangeDTO exchangeDTO) throws ConflictException {
         Optional<Wallet> walletOpt = walletRepository.findById(exchangeDTO.getWalletID());
         Double total = 0.0;
         if (walletOpt.isPresent()) {
@@ -209,21 +235,21 @@ public class WalletService {
             Double coinPrv = wallet.getAllCoin(exchangeDTO.getExchangeTo());
             total = coinPrv + total;}
             wallet.getBalance().put(exchangeDTO.getExchangeTo(), total);
-            this.updateWallet(wallet);}
+            this.updateWallet(convertToDto(wallet));}
             else{
-                throw new Exception("No amount available for transaction");
+                throw new ConflictException("No amount available for transaction");
             }
         } else{
-            throw new NotFoundException("Wallet not registered");
+            throw new ElementNotFoundException("Wallet not registered");
         }
     }
 
     /**
      *
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional
-    public String transferCoins(TransferDTO transferDTO) throws NotFoundException {
+    public String transferCoins(TransferDTO transferDTO) throws ElementNotFoundException {
         Optional<Wallet> wallet1 = walletRepository.findById(transferDTO.getFromWalletID());
         Optional<Wallet> wallet2 = walletRepository.findById(transferDTO.getToWalletID());
         try{
@@ -235,24 +261,27 @@ public class WalletService {
             }
         }
         return wallet2.get().getWalletName()+" new balance=> "+transferDTO.getCoin().toUpperCase()+ "= " + wallet2.get().getAllCoin(transferDTO.getCoin());
-        }catch(NotFoundException e){
-            throw new NotFoundException("Wallet not found");
+        }catch(ElementNotFoundException e){
+            throw new ElementNotFoundException("Wallet not found");
         }
 
 
     }
-    /**
-     *
-     * @param patch = JsonPatch to apply to given wallet to update
-     * @param wallet = wallet to update
-     * @return updated wallet
-     * @throws NotFoundException
-     */
-    @Transactional
-    public Wallet applyPatchToXP(JsonPatch patch, Wallet wallet) throws JsonPatchException, JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode patched = patch.apply(objectMapper.convertValue(wallet, JsonNode.class));
-        return objectMapper.treeToValue(patched, Wallet.class);
+    private WalletDTO convertToDto(Wallet wallet) {
+        WalletDTO walletDTO = modelMapper.map(wallet, WalletDTO.class);
+        walletDTO.setBalance(wallet.getBalance());
+        walletDTO.setId(wallet.getId());
+        walletDTO.setName(wallet.getWalletName());
+        return walletDTO;
+    }
+    private Wallet convertToEntity(WalletDTO walletDTO) throws  ElementNotFoundException {
+        Wallet wallet = modelMapper.map(walletDTO, Wallet.class);
+        wallet.setBalance(walletDTO.getBalance());
+        wallet.setWalletName(walletDTO.getName());
+        if(walletDTO.getId()!=null){
+            wallet.setId(walletDTO.getId());
+        }
+        return wallet;
     }
 
 }

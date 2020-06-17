@@ -10,6 +10,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 Java 11
 
+Maven
+
 Lombok
 
 
@@ -29,51 +31,46 @@ Example body:
 ```
 
 Get a wallet by ID: GET /api/wallets/{id}
-Get all wallets: GET /api/wallets
-Get a wallet by ID: GET /api/wallets/{id}
-Update a wallet: PATCH /api/wallets/{id}
-Example body:
-```
-[
-    {
-    "op":"replace",
-    "path":"/walletName",
-    "value":"new wallet name"
-    }
-]
 
-```
-Buy currencies: POST /api/wallets/{id}
+Get all wallets: GET /api/wallets
+
+Update a wallet: PUT /api/wallets/{id}
 
 Example body:
 ```
 {
-  "exchange": "string",
-  "name": "string",
-  "quantity": 0.0
+  "balance": {
+    "string": double,
+    "string": double
+  },
+  "walletName": "string"
+}
+
+```
+Buy currencies: POST /api/wallets/buy
+
+Example body:
+```
+{
+  "exchangeFrom": "string",
+  "exchangeTo": "string",
+  "quantity": Double,
+  "walletID": Long
 }
 
 ```
 
+Transfer money from one wallet to another: POST /api/wallets/transfer
 
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
+Example body:
 ```
-Give an example
-```
+{
+  "coin": "string",
+  "fromWalletID": Long,
+  "quantity": Double,
+  "toWalletID": Long
+}
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
 ```
 
 ## Built With

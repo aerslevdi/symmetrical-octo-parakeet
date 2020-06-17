@@ -1,6 +1,5 @@
 package com.cristal.crypto.dto;
 
-import com.cristal.crypto.entities.CryptoCoin;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;

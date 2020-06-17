@@ -4,7 +4,6 @@ import com.cristal.crypto.controllers.CoinController;
 import com.cristal.crypto.controllers.OperationController;
 import com.cristal.crypto.controllers.WalletController;
 import com.cristal.crypto.entities.Wallet;
-import javassist.NotFoundException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

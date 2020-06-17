@@ -55,28 +55,7 @@ public class ExceptionHandlerController  {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handlePartialContent(HttpMessageNotReadableException ex) {
-
-        ErrorResponse error = new ErrorResponse();
-        error.setStatus(HttpStatus.PARTIAL_CONTENT.value());
-        error.setMessage(ex.getMessage());
-        error.setTimeStamp(System.currentTimeMillis());
-
-        return new ResponseEntity<>(error, HttpStatus.PARTIAL_CONTENT);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleUnauthorized(HttpClientErrorException.Unauthorized ex) {
-
-        ErrorResponse error = new ErrorResponse();
-        error.setStatus(HttpStatus.UNAUTHORIZED.value());
-        error.setMessage("Authorization required");
-        error.setTimeStamp(System.currentTimeMillis());
-        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleConflicException(ConflictException ex) {
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
 
 
         ErrorResponse error = new ErrorResponse();
