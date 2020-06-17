@@ -4,7 +4,7 @@ The simulator allows CRUD operations of the Wallets, and allows for the transfer
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. It runs on port 8080.
 
 ### Prerequisites
 
@@ -13,6 +13,10 @@ Java 11
 Maven
 
 Lombok
+
+### Swagger
+
+http://localhost:8080/swagger-ui.html
 
 
 ### Endpoints
