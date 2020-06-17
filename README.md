@@ -16,12 +16,31 @@ Lombok
 
 ### Swagger
 
-http://localhost:8080/swagger-ui.html
+Swagger is integrated into the project for ease of access of endpoints:
 
+[Endpoints in swagger](http://localhost:8080/swagger-ui.html)
+
+## Postman collection
+
+A postman collection is provided with available endpoints. 
+File:
+```
+CryptoWallet.postman_collection.json
+```
 
 ### Endpoints
+* Get all cryptocoins with default price in USD:
 
-Create a wallet: POST /api/wallets
+  GET /api/cryptocoins
+
+* Get all cryptocoins with query to get price in different currency (E.g. Euros):
+
+  GET /api/cryptocoins?convert=EUR
+
+* Create a wallet: 
+
+  POST /api/wallets
+
 Example body:
 
 ```
@@ -34,11 +53,17 @@ Example body:
 }
 ```
 
-Get a wallet by ID: GET /api/wallets/{id}
+* Get a wallet by ID: 
 
-Get all wallets: GET /api/wallets
+  GET /api/wallets/{id}
 
-Update a wallet: PUT /api/wallets/{id}
+* Get all wallets: 
+
+  GET /api/wallets
+
+* Update a wallet: 
+
+  PUT /api/wallets/{id}
 
 Example body:
 ```
@@ -51,7 +76,9 @@ Example body:
 }
 
 ```
-Buy currencies: POST /api/wallets/buy
+* Buy currencies: 
+
+  POST /api/wallets/buy
 
 Example body:
 ```
@@ -64,7 +91,9 @@ Example body:
 
 ```
 
-Transfer money from one wallet to another: POST /api/wallets/transfer
+* Transfer money from one wallet to another: 
+
+  POST /api/wallets/transfer
 
 Example body:
 ```

@@ -26,6 +26,7 @@ public class Wallet {
     private String walletName;
     @Column
     @ApiModelProperty(notes = "Wallet balance: coin, quantity", example = "{BTC : 50.0, USD: 50.0 }")
+    @Lob
     private HashMap<String, Double> balance;
 
     public Wallet() {
