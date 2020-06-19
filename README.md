@@ -46,10 +46,10 @@ Example body:
 ```
 {
   "balance": {
-    "string": double,
-    "string": double
+    "String": Double,
+    "String": Double
   },
-  "walletName": "string"
+  "name": "String"
 }
 ```
 
@@ -69,10 +69,10 @@ Example body:
 ```
 {
   "balance": {
-    "string": double,
-    "string": double
+    "string": Double,
+    "string": Double
   },
-  "walletName": "string"
+  "name": "String"
 }
 
 ```
@@ -83,8 +83,8 @@ Example body:
 Example body:
 ```
 {
-  "exchangeFrom": "string",
-  "exchangeTo": "string",
+  "exchangeFrom": "String",
+  "exchangeTo": "String",
   "quantity": Double,
   "walletID": Long
 }
@@ -98,7 +98,7 @@ Example body:
 Example body:
 ```
 {
-  "coin": "string",
+  "coin": "String",
   "fromWalletID": Long,
   "quantity": Double,
   "toWalletID": Long

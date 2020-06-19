@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.cristal</groupId>
 	<artifactId>crypto</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>crypto</name>
 	<description>CryptoWallet Project</description>
 
