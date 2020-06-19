@@ -49,6 +49,8 @@ public class OperationController {
     @ApiOperation(value = "Buy cryptocoins", response=String.class)
     @PostMapping("/wallets/buy")
     public ResponseEntity<String> buyCoin(@RequestBody ExchangeDTO exchangeDTO) throws ConflictException {
+        Double q = exchangeDTO.getQuantity();
+        System.out.println(exchangeDTO.getQuantity().getClass());
         walletService.buyCryptoCurrency(exchangeDTO);
         WalletDTO wallet = walletService.getWalletById(exchangeDTO.getWalletID());
         String response = "Your " + exchangeDTO.getExchangeTo().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getExchangeTo());

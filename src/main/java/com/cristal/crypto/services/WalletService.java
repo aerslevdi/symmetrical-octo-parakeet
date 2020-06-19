@@ -219,20 +219,21 @@ public class WalletService {
         if (walletOpt.isPresent()) {
             Wallet wallet = walletOpt.get();
             ExchangeDTO cCoin = cryptoService.getById(exchangeDTO);
+            System.out.println(cCoin.getPrice());
             Double ratio = cCoin.getPrice();
+            Boolean isCoin = wallet.getCurrency(exchangeDTO.getExchangeTo());
             Double available = wallet.getAllCoin(exchangeDTO.getExchangeFrom());
-            if(available >= exchangeDTO.getQuantity()){
-            total = exchangeDTO.getQuantity() * ratio;
-                System.out.println("available: "+ available);
-            Double balance = available - exchangeDTO.getQuantity();
-            wallet.getBalance().put(exchangeDTO.getExchangeFrom(), balance);
-            if(wallet.getAllCoin(exchangeDTO.getExchangeTo()) != null){
-            Double coinPrv = wallet.getAllCoin(exchangeDTO.getExchangeTo());
-            total = coinPrv + total;}
-            wallet.getBalance().put(exchangeDTO.getExchangeTo(), total);
-            this.updateWallet(convertToDto(wallet));}
-            else{
-                throw new ConflictException("No amount available for transaction");
+                if(available >= exchangeDTO.getQuantity()){
+                    total = exchangeDTO.getQuantity() * ratio;
+                    Double balance = available - exchangeDTO.getQuantity();
+                    wallet.getBalance().put(exchangeDTO.getExchangeFrom(), balance);
+                    if(isCoin){
+                        Double coinPrv = wallet.getAllCoin(exchangeDTO.getExchangeTo());
+                        total = coinPrv + total;}
+                    wallet.getBalance().put(exchangeDTO.getExchangeTo(), total);
+                    this.updateWallet(convertToDto(wallet));}
+                else{
+                    throw new ConflictException("No amount available for transaction");
             }
         } else{
             throw new ElementNotFoundException("Wallet not registered");

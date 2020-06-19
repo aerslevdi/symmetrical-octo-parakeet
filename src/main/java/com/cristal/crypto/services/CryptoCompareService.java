@@ -67,11 +67,14 @@ public class CryptoCompareService{
         String fromUC = cBDTO.getExchangeFrom().toUpperCase();
         String toUC = cBDTO.getExchangeTo().toUpperCase();
         ExchangeDTO cryptoCoins = new ExchangeDTO();
-        LinkedHashMap<String, Double> coin;
+        LinkedHashMap<String, Object> coin;
         try {
              coin = restTemplate.getForObject(
                     API_URL+ "price?fsym=" +fromUC+"&tsyms=" + toUC, LinkedHashMap.class);
-             cryptoCoins.setPrice(coin.get(toUC));
+             cryptoCoins.setPrice((Double)coin.get(toUC));
+             cryptoCoins.setExchangeFrom(fromUC);
+             cryptoCoins.setExchangeTo(toUC);
+             cryptoCoins.setWalletID(cBDTO.getWalletID());
              return cryptoCoins;
         }catch(ElementNotFoundException ex){
             throw new ElementNotFoundException(ex.getMessage());

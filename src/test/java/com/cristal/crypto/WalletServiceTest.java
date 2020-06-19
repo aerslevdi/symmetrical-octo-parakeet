@@ -1,7 +1,4 @@
 package com.cristal.crypto;
-
-import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
-import com.cristal.crypto.config.APIConnection;
 import com.cristal.crypto.dto.WalletDTO;
 import com.cristal.crypto.entities.Wallet;
 import com.cristal.crypto.exception.ElementNotFoundException;
@@ -11,95 +8,87 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
+
+import java.util.LinkedHashMap;
 import java.util.List;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class WalletServiceTest {
-
-    private static String BASE_URL = "http://localhost:8080/api";
+    private static final String LOCALHOST = "http://localhost:";
+    private static final String CONTEXT_PATH = "/api";
+    private static final String URL_BASE= "http://localhost:8080/api";
+    @LocalServerPort
+    private int port;
     @Autowired
-    private TestRestTemplate restTemplate;
+    private TestRestTemplate testRestTemplate;
 
     @Test
     public void getAllWallets()
             throws ElementNotFoundException {
-
-        APIConnection connectionToApi = new APIConnection();
-        ResponseEntity<List> httpResponse = restTemplate.getForEntity(BASE_URL+"/wallets",List.class);
+        final String url = LOCALHOST + port + CONTEXT_PATH;
+        ResponseEntity<List> httpResponse = testRestTemplate.getForEntity(url+"/wallets",List.class);
         List responseList =  httpResponse.getBody();
-
         Assert.assertTrue(responseList.size() >= 0);
-        Wallet wallet = (Wallet) responseList.get(0);
-        Assert.assertTrue(wallet.getWalletName().equals("First wallet"));
-        Assert.assertTrue(wallet.getId()==1);
+        LinkedHashMap wallet = (LinkedHashMap) responseList.get(0);
+        Assert.assertTrue(wallet.get("name").equals("First wallet"));
+        Assert.assertTrue((Integer) wallet.get("id")==1);
         Assert.assertTrue(httpResponse.getStatusCode() == HttpStatus.OK);
     }
 
     @Test
     public void getWalletById(){
-        APIConnection connectionToApi = new APIConnection();
-        ResponseEntity<WalletDTO> httpResponse = restTemplate.getForEntity(BASE_URL+"/wallets/2",WalletDTO.class);
+        final String url = LOCALHOST + port + CONTEXT_PATH;
+        ResponseEntity<LinkedHashMap> httpResponse = testRestTemplate.getForEntity(url+"/wallets/2",LinkedHashMap.class);
 
-        WalletDTO walletDTO = httpResponse.getBody();
-        Assert.assertTrue(walletDTO.getId()==2);
-        Assert.assertTrue(walletDTO.getName().equals("Second wallet"));
+        LinkedHashMap walletDTO = httpResponse.getBody();
+        Assert.assertTrue((Integer) walletDTO.get("id")==2);
+        Assert.assertTrue(walletDTO.get("name").equals("Second wallet"));
         Assert.assertTrue(httpResponse.getStatusCode() == HttpStatus.OK);
     }
 
     @Test
     public void getNonExistentWallet() {
+        final String url = LOCALHOST + port + CONTEXT_PATH;
         boolean isThrowingException = false;
         try {
-            APIConnection connectionToApi = new APIConnection();
-            ResponseEntity<WalletDTO> httpResponse = restTemplate.getForEntity(BASE_URL + "/wallets/10", WalletDTO.class);
+            ResponseEntity<WalletDTO> httpResponse = testRestTemplate.getForEntity(url + "/wallets/10", WalletDTO.class);
         }catch(HttpClientErrorException.NotFound ex){
             isThrowingException = true;
         }
         Assert.assertTrue(isThrowingException);
     }
-
     @Test
     public void createAndDeleteWallet(){
-
+        final String url = LOCALHOST + port + CONTEXT_PATH;
         WalletDTO testWallet = new WalletDTO();
         testWallet.setName("Test wallet");
         HttpEntity<WalletDTO> request = new HttpEntity<>(testWallet);
-
-        APIConnection connectionToApi = new APIConnection();
-        ResponseEntity httpResponsePost = restTemplate.postForEntity(BASE_URL+"/wallets", request,Wallet.class);
-
+        ResponseEntity httpResponsePost = testRestTemplate.postForEntity(url+"/wallets", request,Wallet.class);
         WalletDTO newWallet = (WalletDTO) httpResponsePost.getBody();
-
-
         Assert.assertTrue(newWallet.getName().equals(testWallet.getName()));
         Assert.assertTrue(newWallet.getId()==(testWallet.getId()));
+        testRestTemplate.delete(url+"/wallets/"+newWallet.getId());
 
-        ResponseEntity httpResponseDelete = restTemplate.delete(BASE_URL+"/wallets/"+newWallet.getId());
-
-        String deleteResponse = (String) httpResponseDelete.getBody();
-
-        Assert.assertTrue(deleteResponse.equals("The wallet was deleted"));
+        ResponseEntity<WalletDTO> httpResponse = testRestTemplate.getForEntity(url + "/wallets/10", WalletDTO.class);
 
     }
 
-    @Test
+   @Test
     public void updateWallet(){
-
-        APIConnection connectionToApi = new APIConnection();
-
-        ResponseEntity<WalletDTO> httpResponse = connectionToApi.connect(BASE_URL+"/wallets/3", HttpMethod.GET,WalletDTO.class,null);
+        final String url = LOCALHOST + port + CONTEXT_PATH;
+        ResponseEntity<WalletDTO> httpResponse = testRestTemplate.getForEntity(url+"/wallets/3",WalletDTO.class);
 
         WalletDTO walletDTO = httpResponse.getBody();
         String walletDTOName = walletDTO.getName();
         Long walletDTOId = walletDTO.getId();
-
 
         String walletNameUpdate = "New wallet name";
 
@@ -107,32 +96,30 @@ public class WalletServiceTest {
         walletDTOUpdate.setName(walletNameUpdate);
         walletDTOUpdate.setId(walletDTOId);
         walletDTOUpdate.setBalance(walletDTO.getBalance());
+        HttpEntity<WalletDTO> updateRequest = new HttpEntity<>(walletDTOUpdate);
 
-        ResponseEntity<WalletDTO> httpResponsePutWallet = connectionToApi.connect(BASE_URL+"/wallets/"+walletDTOId, HttpMethod.PUT,WalletDTO.class,walletDTOUpdate);
+        testRestTemplate.exchange(url+"/wallets/"+walletDTOId, HttpMethod.PUT,updateRequest,Void.class);
 
-        WalletDTO updatedWallet = httpResponsePutWallet.getBody();
-
-        Assert.assertTrue(updatedWallet.getId()==walletDTO.getId());
-        Assert.assertTrue(updatedWallet.getName().equals(walletDTOName));
-
-        ResponseEntity<WalletDTO> httpResponseGet = connectionToApi.connect(BASE_URL+"/wallets/"+updatedWallet.getId(), HttpMethod.GET,WalletDTO.class,null);
+        ResponseEntity<WalletDTO> httpResponseGet = testRestTemplate.getForEntity(url+"/wallets/"+walletDTOId,WalletDTO.class);
 
         WalletDTO updatedWalletDTO = httpResponseGet.getBody();
         Assert.assertTrue(walletDTOUpdate.getName().equals(updatedWalletDTO.getName()));
         Assert.assertTrue(walletDTOUpdate.getId()==updatedWalletDTO.getId());
     }
-
+    /*
     @Test
     public void deleteFalseWallet(){
+        final String url = LOCALHOST + port + CONTEXT_PATH;
         boolean isThrowingException = false;
-        APIConnection connectionToApi = new APIConnection();
         try {
-            ResponseEntity httpResponseDelete = connectionToApi.connect(BASE_URL + "/wallets/999999", HttpMethod.DELETE, String.class, null);
+            testRestTemplate.getForEntity(url + "/wallets/12",  String.class);
+            Assert.assertThrows(isThrowingException);
         }catch(HttpClientErrorException.NotFound ex){
             isThrowingException = true;
+            Assert.assertTrue(isThrowingException);
         }
-        Assert.assertTrue(isThrowingException);
-    }
+
+    }*/
 
 
 

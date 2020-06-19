@@ -23,7 +23,7 @@ public class ExchangeDTO implements Serializable {
     @ApiModelProperty(notes = "Intial currency")
     private String exchangeFrom;
     @ApiModelProperty(notes = "price", hidden=true)
-    private Double price;
+    private Double price= 0.0;
     @ApiModelProperty(notes = "Quantity of initial currency to exchange")
     private Double quantity;
 }
