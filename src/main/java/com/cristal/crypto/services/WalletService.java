@@ -71,12 +71,11 @@ public class WalletService {
     public void delete(Long id) throws ElementNotFoundException {
         Optional<Wallet> wallet = walletRepository.findById(id);
 
-        if (wallet.isPresent()) {
+        try{
             walletRepository.deleteById(id);
-        } else {
-            ElementNotFoundException ex =  new ElementNotFoundException("No wallet record exist for given id");
+        } catch (ElementNotFoundException ex){
             logger.error(ex.getMessage());
-            throw ex;
+            throw new ElementNotFoundException("No wallet record exist for given id");
         }
     }
     /**
@@ -89,8 +88,8 @@ public class WalletService {
     public WalletDTO createWallet(WalletDTO walletDTO) throws ElementNotFoundException {
         try{
             Wallet wallet = walletRepository.save(convertToEntity(walletDTO));
-            System.out.println(wallet.toString());
-            return convertToDto(wallet);}
+            walletDTO.setId(wallet.getId());
+            return walletDTO;}
         catch (ElementNotFoundException ex){
             logger.error(ex.getMessage());
             throw new ElementNotFoundException("No wallet record exist for given id");
