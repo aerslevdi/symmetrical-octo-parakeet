@@ -8,12 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +35,7 @@ public class WalletServiceTest {
         final String url = LOCALHOST + port + CONTEXT_PATH;
         ResponseEntity<List> httpResponse = testRestTemplate.getForEntity(url+"/wallets",List.class);
         List responseList =  httpResponse.getBody();
-        assertTrue(responseList.size() >= 0);
+        assertTrue(responseList.size() > 0 && responseList !=null);
         LinkedHashMap wallet = (LinkedHashMap) responseList.get(0);
         assertTrue(wallet.get("name").equals("First wallet"));
         assertTrue((Integer) wallet.get("id")==1);
@@ -109,7 +107,11 @@ public class WalletServiceTest {
     @Test
     public void deleteFalseWallet(){
         final String url = LOCALHOST + port + CONTEXT_PATH;
-        testRestTemplate.delete(url+"/wallets/13", String.class);
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<LinkedHashMap> httpResponse= testRestTemplate.exchange(url+"/wallets/13",
+                HttpMethod.DELETE,entity,LinkedHashMap.class);
+            assertEquals("No wallet record exist for given id", httpResponse.getBody().get("message"));
 
     }
 

@@ -33,7 +33,7 @@ public class WalletService {
     /**
      *
      * @return List of all existing wallets
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional(readOnly = true)
     public List<WalletDTO> getAll() throws ElementNotFoundException{
@@ -69,8 +69,6 @@ public class WalletService {
      */
     @Transactional
     public void delete(Long id) throws ElementNotFoundException {
-        Optional<Wallet> wallet = walletRepository.findById(id);
-
         try{
             walletRepository.deleteById(id);
         } catch (ElementNotFoundException ex){
@@ -89,7 +87,8 @@ public class WalletService {
         try{
             Wallet wallet = walletRepository.save(convertToEntity(walletDTO));
             walletDTO.setId(wallet.getId());
-            return walletDTO;}
+            return walletDTO;
+        }
         catch (ElementNotFoundException ex){
             logger.error(ex.getMessage());
             throw new ElementNotFoundException("No wallet record exist for given id");
@@ -98,10 +97,10 @@ public class WalletService {
     /**
      *
      * @param id = ID of wallet
-     * @param id = ID of currency to withdraw
-     * @param id = quantity of currency to withdraw
+     * @param coin = ID of currency to withdraw
+     * @param quantity = quantity of currency to withdraw
      * @return updated wallet
-     * @throws NotFoundException
+     * @throws ElementNotFoundException
      */
     @Transactional
     public Wallet withdrawCoin(Long id, String coin, Double quantity) throws ElementNotFoundException {
@@ -232,7 +231,7 @@ public class WalletService {
                     wallet.getBalance().put(exchangeDTO.getExchangeTo(), total);
                     this.updateWallet(convertToDto(wallet));}
                 else{
-                    throw new ConflictException("No amount available for transaction");
+                    throw new ConflictException("Amount available insufficient for transaction");
             }
         } else{
             throw new ElementNotFoundException("Wallet not registered");
