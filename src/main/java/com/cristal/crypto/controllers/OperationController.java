@@ -49,10 +49,10 @@ public class OperationController {
     @ApiOperation(value = "Buy cryptocoins", response=String.class)
     @PostMapping("/wallets/buy")
     public ResponseEntity<String> buyCoin(@RequestBody ExchangeDTO exchangeDTO) throws ConflictException {
-        Double q = exchangeDTO.getQuantity();
         walletService.buyCryptoCurrency(exchangeDTO);
         WalletDTO wallet = walletService.getWalletById(exchangeDTO.getWalletID());
         String response = "Your " + exchangeDTO.getExchangeTo().toUpperCase() + " balance: " + wallet.getBalance().get(exchangeDTO.getExchangeTo());
+        logger.info("Buying "+ exchangeDTO.getExchangeTo());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
     }
@@ -73,6 +73,7 @@ public class OperationController {
     @PostMapping("/wallets/transfer")
     public ResponseEntity<String > transfer(@RequestBody TransferDTO transferDTO) throws ElementNotFoundException {
         String response = walletService.transferCoins(transferDTO);
+        logger.info("Transferring " + transferDTO.getCoin()+" to: "+ transferDTO.getToWalletID());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
     }

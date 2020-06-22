@@ -1,6 +1,5 @@
 package com.cristal.crypto;
 import com.cristal.crypto.dto.WalletDTO;
-import com.cristal.crypto.entities.Wallet;
 import com.cristal.crypto.exception.ElementNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,8 +9,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.List;

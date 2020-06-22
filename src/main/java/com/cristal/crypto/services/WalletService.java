@@ -217,7 +217,6 @@ public class WalletService {
         if (walletOpt.isPresent()) {
             Wallet wallet = walletOpt.get();
             ExchangeDTO cCoin = cryptoService.getById(exchangeDTO);
-            System.out.println(cCoin.getPrice());
             Double ratio = cCoin.getPrice();
             Boolean isCoin = wallet.getCurrency(exchangeDTO.getExchangeTo());
             Double available = wallet.getAllCoin(exchangeDTO.getExchangeFrom());
